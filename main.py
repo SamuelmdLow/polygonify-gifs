@@ -162,6 +162,8 @@ if __name__ == '__main__':
             else:
                 if a == "percent":
                     percent = True
+                elif a == "isometric" or a == "even":
+                    plantStyle = a
                 else:
                     for i in range(len(char_arg)):
                         if not char_arg[i]:
@@ -175,7 +177,7 @@ if __name__ == '__main__':
             if int_arg[1]:
                 edges = int_arg[1]
             
-            poly = Polygonify(Image.open(r""+input_file), poly_num, edges, percent=percent)
+            poly = Polygonify(Image.open(r""+input_file), poly_num, edges, percent=percent, plantStyle=plantStyle)
 
             out = {'width': poly.image.width,
                    'height': poly.image.height,

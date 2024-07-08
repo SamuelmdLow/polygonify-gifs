@@ -2,6 +2,7 @@ from PIL import Image
 import sys
 import random
 import math
+import json
 
 class Polygonify:
     def __init__(self, image, poly_num, edge_count):
@@ -56,9 +57,9 @@ class Polygonify:
                 d = 0
                 while self.verifyPixel(self.px[x,y]):
                     #print("d #%i", d)
-                    nextX = stepX*d + o[0]
-                    nextY = stepY*d + o[1]
-                    if x > 0 and x < self.image.width and y > 0 and y < self.image.height:
+                    nextX = math.floor(stepX*d + o[0])
+                    nextY = math.floor(stepY*d + o[1])
+                    if nextX > 0 and nextX < self.image.width and nextY > 0 and nextY < self.image.height:
                         if self.verifyPixel(self.px[nextX, nextY]):
                             x = nextX
                             y = nextY
@@ -77,12 +78,45 @@ class Polygonify:
         return p
 
 if __name__ == '__main__':
-    #sys.argv[1]
-    #im = Image.open(r"C:\Users\tubbd\Pictures\art\theBoys.png")
-    poly_num = 5
-    edges = 3
+    if len(sys.argv) < 2:
+        print("\npython main.py input_file output_file edge_count polygon_number\n")
+    else:
+        
+        char_arg = [False, False]
+        int_arg = [False, False]
+        poly_num = 5
+        edges = 3
 
-    poly = Polygonify(Image.open(r"C:\Users\tubbd\Downloads\checktitle.png"), poly_num, edges)
-    p = poly.polygonify()
+        for a in sys.argv[1:]:
+            if a.isnumeric():
+                for i in range(len(int_arg)):
+                    if not int_arg[i]:
+                        int_arg[i] = int(a)
+                        break
+            else:
+                for i in range(len(char_arg)):
+                    if not char_arg[i]:
+                        char_arg[i] = a
+                        break
 
-    print(p)
+        if char_arg[0]:
+            input_file = char_arg[0]
+            if int_arg[0]:
+                poly_num = int_arg[0]
+            if int_arg[1]:
+                edges = int_arg[1]
+            
+            poly = Polygonify(Image.open(r""+input_file), poly_num, edges)
+            p = poly.polygonify()
+
+            if not char_arg[1]:
+                print(p)
+            else:
+                output_file = char_arg[1]
+                json_object = json.dumps(p, indent=4)
+ 
+                with open(output_file, "w") as outfile:
+                    outfile.write(json_object)
+                print("\nWritten to '" + output_file + "' successfully!\n")
+        else:
+            print("You must have an argument to an input file")

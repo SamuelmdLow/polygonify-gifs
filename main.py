@@ -15,7 +15,14 @@ class Polygonify:
         self.plantStyle = plantStyle
 
     def verifyPixel(self, pixel):
-        return pixel[0] < 100
+        if self.image.mode == "P":
+            return pixel == 0
+        elif self.image.mode == "RGB":
+            return pixel[0] > 100
+        elif self.image.mode == "RGBA":
+            return pixel[0] < 100
+        else:
+            return False
 
     def plant(self):
 
@@ -41,19 +48,19 @@ class Polygonify:
                 while(t > 0):
                     trys = 0
                     tile_cols = math.floor(self.image.width/tiles[t]['width'])
-                    tile_count = tile_cols * (self.image.height / tiles[t]['height'])
+                    tile_count = tile_cols * (self.image.height // tiles[t]['height'])
                     cutoff = (tiles[t]['width'] * tiles[t]['height'])/10
                     
                     minX = ((i%tile_count) % tile_cols)
                     minY = ((i%tile_count) // tile_cols)
-                    #print("minx:%d miny:%d" % (minX, minY))
-
-                    #print("iw:%d ih:%d cols:%d count:%d w:%d h:%d" % (self.image.width, self.image.height, tile_cols, tile_count, tiles[t]['width'],tiles[t]['height']))
+                    
+                    # print("minx:%d miny:%d" % (minX, minY))
+                    # print("iw:%d ih:%d cols:%d count:%d w:%d h:%d" % (self.image.width, self.image.height, tile_cols, tile_count, tiles[t]['width'],tiles[t]['height']))
 
                     while trys < cutoff:
                         x = random.randint(minX * tiles[t]['width'], ((minX + 1)  * tiles[t]['width']) - 1)
                         y = random.randint(minY * tiles[t]['height'], ((minY + 1) * tiles[t]['height']) - 1)
-                        #print("x:%d y:%d" % (x, y))
+                        # print("x:%d y:%d" % (x, y))
                         if self.verifyPixel(self.px[x, y]):
                             self.origins.append((x,y))
                             planted = True
@@ -113,8 +120,8 @@ class Polygonify:
                 #print("edge #%i", e)
                 x = o[0]
                 y = o[1]
-                stepX = math.cos(e * deg)
-                stepY = math.sin(e * deg)
+                stepX = math.cos(e * deg + random.random()*math.pi/2)
+                stepY = math.sin(e * deg + random.random()*math.pi/2)
                 d = 0
                 while self.verifyPixel(self.px[x,y]):
                     #print("d #%i", d)
@@ -140,7 +147,10 @@ class Polygonify:
     def polygonify(self):
         self.plant()
         p = self.grow()
-        return p
+        return {'width': self.image.width,
+                   'height': self.image.height,
+                   'polygons': p
+            }
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -177,13 +187,22 @@ if __name__ == '__main__':
             if int_arg[1]:
                 edges = int_arg[1]
             
-            poly = Polygonify(Image.open(r""+input_file), poly_num, edges, percent=percent, plantStyle=plantStyle)
-
-            out = {'width': poly.image.width,
-                   'height': poly.image.height,
-                   'polygons': []
-            }
-            out['polygons'] = poly.polygonify()
+            if input_file[-4:] == ".gif":
+                out = []
+                im = Image.open(input_file)
+                
+                framecount = im.n_frames
+                #framecount = 10
+                for i in range(framecount):
+                    im.seek(i)
+                    # print(im)
+                    # im.save('{}.png'.format(i))
+                    p = Polygonify(im, poly_num, edges, percent=percent, plantStyle=plantStyle)
+                    out.append(p.polygonify())
+            else:
+                im = Image.open(r""+input_file)
+                p = Polygonify(im, poly_num, edges, percent=percent, plantStyle=plantStyle)
+                out = p.polygonify()
 
             if not char_arg[1]:
                 print(out)
